@@ -3,6 +3,7 @@ package com.july.studio.permissions.example
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,10 +14,17 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 import androidx.fragment.app.Fragment
 import com.july.studio.andpermissions.AndPermissions
-import com.july.studio.andpermissions.callback.OnPermissionCallback
+import com.july.studio.andpermissions.callback.OnResultCallback
+import com.july.studio.andpermissions.callback.OnPermissionRun
+import com.july.studio.andpermissions.callback.OnExplainCallback
+import java.util.function.Consumer
 
 /**
  * @author JulyYu
@@ -36,7 +44,19 @@ class AcPermissionPage : AppCompatActivity() {
             .commit()
         launcher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         }
+//        shouldShowRequestPermissionRationale
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            packageManager.getGroupOfPlatformPermission(
+                Manifest.permission.WRITE_CALENDAR,
+                ContextCompat.getMainExecutor(this@AcPermissionPage),
+                object : Consumer<String> {
+                    override fun accept(t: String) {
+                        Log.d("<><>", "accept ---> $t")
+                    }
 
+                })
+        }
+//        packageManager.getPlatformPermissionsForGroup()
     }
 
 
@@ -46,29 +66,45 @@ class AcPermissionPage : AppCompatActivity() {
                 AndPermissions.Builder(context = context)
                     .permissions(
                         listOf(
-//                            Manifest.permission_group.CALENDAR
+//                            Manifest.permission_group.CALENDAR,
                             Manifest.permission.WRITE_CALENDAR,
                             Manifest.permission.READ_CALENDAR,
+//                            Manifest.permission.CAMERA,
                         )
                     )
-                    .onPermissionCallback(object : OnPermissionCallback {
-                        override fun onPermissionRequesting(permissions: List<String>) {
-//                            Toast.makeText(
-//                                context,
-//                                "onPermissionRequesting ${permissions}",
-//                                Toast.LENGTH_LONG
-//                            ).show()
+                    .onExplainPermission(object : OnExplainCallback {
+
+                        override fun onExplain(permissions: List<String>, onRun: OnPermissionRun) {
+                            var dialog = AlertDialog.Builder(context)
+                                .setMessage("为什么需要${permissions}权限说明")
+                                .setNegativeButton(
+                                    "取消"
+                                ) { dialog, _ ->
+                                    onRun.onCancel()
+                                    dialog.dismiss()
+                                }
+                                .setPositiveButton("可以") { dialog, _ ->
+                                    onRun.onRun()
+                                    dialog.dismiss()
+                                }
+                            dialog.setOnDismissListener {
+                                onRun.onCancel()
+                            }
+                            dialog.show()
                         }
+
+                    })
+                    .onPermissionCallback(object : OnResultCallback {
                         override fun onPermissionResult(
                             isAllGranted: Boolean,
                             permissionResults: MutableMap<String, Boolean>
                         ) {
                             if (isAllGranted) {
-//                                Toast.makeText(
-//                                    context,
-//                                    "authorized ${permissionResults}",
-//                                    Toast.LENGTH_LONG
-//                                ).show()
+                                Toast.makeText(
+                                    context,
+                                    "authorized ${permissionResults}",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                             permissionResults.forEach {
                                 Log.v("<><>", "permissionResults: ${it.key} ${it.value}")
@@ -92,6 +128,18 @@ class AcPermissionPage : AppCompatActivity() {
                 addView(Button(context).apply {
                     text = "只检查是否有权限"
                     setOnClickListener {
+                        val code = PermissionChecker.checkSelfPermission(
+                            context,
+                            Manifest.permission.WRITE_CALENDAR
+                        )
+                        var rationale =
+                            ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(),Manifest.permission.WRITE_CALENDAR)
+                        var rationale2 = shouldShowRequestPermissionRationale(Manifest.permission.WRITE_CALENDAR)
+                        var request = PermissionChecker.checkSelfPermission(requireActivity(),Manifest.permission.WRITE_CALENDAR)
+                        Log.v(
+                            "<><>",
+                            "code $code rationale $rationale  rationale2 $rationale2 request $request"
+                        )
                         var permissions =
                             AndPermissions.check(
                                 context, listOf(
@@ -100,7 +148,10 @@ class AcPermissionPage : AppCompatActivity() {
                                 )
                             )
                         permissions.forEach {
-                            Log.v("<><>", "permissionResults: ${it.key} ${it.value}")
+                            Log.v(
+                                "<><>",
+                                " permissionResults: ${it.key} ${it.value}"
+                            )
                         }
                     }
                 })
@@ -110,16 +161,8 @@ class AcPermissionPage : AppCompatActivity() {
                         AndPermissions.jumpActivityCheck(
                             context,
                             AcAnnotationPage::class.java,
-                            onPermissionCallback = object :
-                                OnPermissionCallback {
-                                override fun onPermissionRequesting(permissions: List<String>) {
-//                                    Toast.makeText(
-//                                        context,
-//                                        "onPermissionRequesting ${permissions}",
-//                                        Toast.LENGTH_LONG
-//                                    ).show()
-
-                                }
+                            onResultCallback = object :
+                                OnResultCallback {
 
                                 override fun onPermissionResult(
                                     isAllGranted: Boolean,

@@ -6,10 +6,9 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
-import com.july.studio.andpermissions.callback.PermissionCallbackWrapper
+import com.july.studio.andpermissions.permission.ResultHandler
 import com.july.studio.andpermissions.ui.AppPermissionActivity
 import com.july.studio.andpermissions.ui.AppPermissionFragment
 import com.july.studio.andpermissions.ui.AppPermissionOldFragment
@@ -22,28 +21,28 @@ import com.july.studio.andpermissions.ui.AppPermissionOldFragment
 internal object AuthorLauncher {
 
 
-    fun authorLaunch(context: Context, callbackWrapper: PermissionCallbackWrapper) {
+    fun authorLaunch(context: Context, permissionHandler: ResultHandler) {
         when (context) {
             is FragmentActivity -> {
-                launchWithFragment(context, callbackWrapper)
+                launchWithFragment(context, permissionHandler)
             }
 
             is ComponentActivity -> {
                 if (!context.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                    launchWithActivity(context, callbackWrapper)
+                    launchWithActivity(context, permissionHandler)
                 } else {
-                    launchWithPermissionActivity(context, callbackWrapper, true)
+                    launchWithPermissionActivity(context, permissionHandler, true)
                 }
             }
 
             is Activity -> {
-                launchWithOldFragment(context, callbackWrapper)
+                launchWithOldFragment(context, permissionHandler)
             }
 
             else -> {
                 launchWithPermissionActivity(
                     context = context,
-                    callbackWrapper = callbackWrapper,
+                    handler = permissionHandler,
                     isContent = true
                 )
             }
@@ -56,7 +55,7 @@ internal object AuthorLauncher {
      */
     private fun launchWithPermissionActivity(
         context: Context,
-        callbackWrapper: PermissionCallbackWrapper,
+        handler: ResultHandler,
         isContent: Boolean = false
     ) {
         Intent(context, AppPermissionActivity::class.java).apply {
@@ -65,8 +64,8 @@ internal object AuthorLauncher {
             )
             putExtra(
                 AppPermissionActivity.PERMISSION_CONFIG, RequestPermissionHandler(
-                    keyId = callbackWrapper.keyId,
-                    permissions = ArrayList(callbackWrapper.permissions)
+                    keyId = handler.keyId,
+                    permissions = ArrayList(handler.requestPermissions)
                 )
             )
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -79,27 +78,27 @@ internal object AuthorLauncher {
      * android架构中的ComponentActivity申请权限
      */
     private fun launchWithActivity(
-        activity: ComponentActivity, callbackWrapper: PermissionCallbackWrapper
+        activity: ComponentActivity, handler: ResultHandler
     ) {
         RequestPermissionHandler(
-            keyId = callbackWrapper.keyId,
-            permissions = ArrayList(callbackWrapper.permissions),
+            keyId = handler.keyId,
+            permissions = ArrayList(handler.requestPermissions),
         ).apply {
             val permissionCallback = getCallbackWrapper()
-            permissionCallback?.onRationaleCallback?.apply {
-                val rationaleResults: MutableMap<String, Boolean> = mutableMapOf()
-                var isRationaleAllPass = true
-                for (permission in callbackWrapper.permissions) {
-                    val boolResult =
-                        ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
-                    if (boolResult) isRationaleAllPass = false
-                    rationaleResults[permission] = boolResult
-                }
-                if (!isRationaleAllPass) {
-                    onRationaleResult(rationaleResults)
-                    return
-                }
-            }
+//            permissionCallback?.onRationaleCallback?.apply {
+//                val rationaleResults: MutableMap<String, Boolean> = mutableMapOf()
+//                var isRationaleAllPass = true
+//                for (permission in handler.requestPermissions) {
+//                    val boolResult =
+//                        ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+//                    if (boolResult) isRationaleAllPass = false
+//                    rationaleResults[permission] = boolResult
+//                }
+//                if (!isRationaleAllPass) {
+//                    onRationaleResult(rationaleResults)
+//                    return
+//                }
+//            }
             val launcher =
                 activity.registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
                     val permissionResults: MutableMap<String, Boolean> = mutableMapOf()
@@ -118,15 +117,15 @@ internal object AuthorLauncher {
      * Activity中添加Fragment形式申请权限
      */
     private fun launchWithFragment(
-        activity: FragmentActivity, callbackWrapper: PermissionCallbackWrapper
+        activity: FragmentActivity, handler: ResultHandler
     ) {
         val appPermissionFragment = AppPermissionFragment()
         activity.supportFragmentManager.beginTransaction()
-            .add(android.R.id.content, appPermissionFragment).commitNowAllowingStateLoss()
+            .add(appPermissionFragment,"permission-fragment").commitNowAllowingStateLoss()
         appPermissionFragment.requestPermissions(
             config = RequestPermissionHandler(
-                keyId = callbackWrapper.keyId,
-                permissions = ArrayList(callbackWrapper.permissions),
+                keyId = handler.keyId,
+                permissions = ArrayList(handler.requestPermissions),
             )
         )
     }
@@ -135,7 +134,7 @@ internal object AuthorLauncher {
      * 兼容旧版本的Activity中添加Fragment形式申请权限
      */
     private fun launchWithOldFragment(
-        activity: Activity, callbackWrapper: PermissionCallbackWrapper,
+        activity: Activity, handler: ResultHandler,
     ) {
         var appPermissionOldFragment = AppPermissionOldFragment()
         var fragmentTransaction = activity.fragmentManager.beginTransaction()
@@ -147,14 +146,26 @@ internal object AuthorLauncher {
         }
         appPermissionOldFragment.requestPermissions(
             config = RequestPermissionHandler(
-                keyId = callbackWrapper.keyId,
-                permissions = ArrayList(callbackWrapper.permissions),
+                keyId = handler.keyId,
+                permissions = ArrayList(handler.requestPermissions),
             )
         )
     }
 
 
-    fun removeOldFragment(activity: Activity) {
+
+    fun removeOver(context: Context){
+        when (context) {
+            is Activity -> {
+                removeOldFragment(context)
+            }
+
+           is FragmentActivity -> {
+                removeFragment(context)
+            }
+        }
+    }
+    private fun removeOldFragment(activity: Activity) {
         var appPermissionOldFragment =
             activity.fragmentManager.findFragmentByTag("permission-fragment")
         if (appPermissionOldFragment is AppPermissionOldFragment) {
@@ -168,9 +179,9 @@ internal object AuthorLauncher {
         }
     }
 
-    fun removeFragment(activity: FragmentActivity) {
+    private fun removeFragment(activity: FragmentActivity) {
         val appPermissionFragment =
-            activity.supportFragmentManager.findFragmentById(android.R.id.content)
+            activity.supportFragmentManager.findFragmentByTag("permission-fragment")
         if (appPermissionFragment is AppPermissionFragment) {
             activity.supportFragmentManager.beginTransaction().remove(appPermissionFragment)
                 .commitNowAllowingStateLoss()

@@ -4,7 +4,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.july.studio.andpermissions.RequestPermissionHandler
-import com.july.studio.andpermissions.callback.PermissionCallbackWrapper
+import com.july.studio.andpermissions.permission.ResultHandler
 
 /**
  * @author JulyYu
@@ -16,7 +16,7 @@ class AppPermissionFragment : Fragment() {
     private var isRequest = false
     private var isFromContent = false // 是否来自内部的
     private var requestPermissionHandler: RequestPermissionHandler? = null
-    private var permissionCallback: PermissionCallbackWrapper? = null
+    private var permissionHandler: ResultHandler? = null
     private val result_code = 999
 
 
@@ -42,28 +42,29 @@ class AppPermissionFragment : Fragment() {
         if (host != null && !isRequest) {
             isRequest = true
             requestPermissionHandler?.apply {
-                permissionCallback = config.getCallbackWrapper()
-                if(permissionCallback?.onRationaleCallback != null){
-                    permissionCallback!!.onRationaleCallback!!.apply {
-                        val rationaleResults: MutableMap<String, Boolean> = mutableMapOf()
-                        var isRationaleAllPass = true
-                        for (permission in permissions!!) {
-                            val boolResult = shouldShowRequestPermissionRationale(permission)
-                            if (boolResult) isRationaleAllPass = false
-                            rationaleResults[permission] = boolResult
-                        }
-                        if (!isRationaleAllPass) {
-                            onRationaleResult(rationaleResults)
-                            if(isFromContent) {
-                                finish()
-                            }
-                            return
-                        }
-                        requestPermissions(permissions!!.toTypedArray(), result_code)
-                    }
-                }else{
+                permissionHandler = config.getCallbackWrapper()
+//                if(permissionHandler?.onRationaleCallback != null){
+//                    permissionHandler!!.onRationaleCallback!!.apply {
+//                        val rationaleResults: MutableMap<String, Boolean> = mutableMapOf()
+//                        var isRationaleAllPass = true
+//                        for (permission in permissions!!) {
+//                            val boolResult = shouldShowRequestPermissionRationale(permission)
+//                            if (boolResult) isRationaleAllPass = false
+//                            rationaleResults[permission] = boolResult
+//                        }
+//                        if (!isRationaleAllPass) {
+//                            onRationaleResult(rationaleResults)
+//                            if(isFromContent) {
+//                                finish()
+//                            }
+//                            return
+//                        }
+//                        requestPermissions(permissions!!.toTypedArray(), result_code)
+//                    }
+//                }
+//                else{
                     requestPermissions(permissions!!.toTypedArray(), result_code)
-                }
+//                }
             }
 
         }
@@ -84,7 +85,7 @@ class AppPermissionFragment : Fragment() {
                 permissionResults[permission] = value
                 isAllGranted = isAllGranted && value
             }
-            permissionCallback?.onPermissionResult(isAllGranted,permissionResults)
+            permissionHandler?.onPermissionResult(isAllGranted,permissionResults)
             if(isFromContent){
                 finish()
             }

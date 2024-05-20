@@ -2,9 +2,10 @@ package com.july.studio.andpermissions
 
 import android.content.Context
 import androidx.core.content.PermissionChecker
-import com.july.studio.andpermissions.callback.OnPermissionCallback
+import com.july.studio.andpermissions.callback.OnResultCallback
 import com.july.studio.andpermissions.callback.OnRationaleCallback
-import com.july.studio.andpermissions.callback.PermissionCallbackWrapper
+import com.july.studio.andpermissions.callback.OnExplainCallback
+import com.july.studio.andpermissions.permission.PermissionHandlerWrapper
 import com.july.studio.andpermissions.port.PermissionCollectorPort
 import java.lang.ref.SoftReference
 
@@ -20,8 +21,10 @@ class AndPermissions private constructor(builder: Builder) {
 
     private var context: SoftReference<Context>
     private var permissions: List<String> = emptyList()
-    private var onPermissionCallback: OnPermissionCallback? = null
+    private var onResultCallback: OnResultCallback? = null
     private var onRationaleCallback: OnRationaleCallback? = null
+    private var onExplainCallback: OnExplainCallback? = null
+    private var explainEach: Boolean = false
 
 
     companion object {
@@ -46,7 +49,7 @@ class AndPermissions private constructor(builder: Builder) {
          */
         fun jumpActivityCheck(
             context: Context, clazz: Class<*>,
-            onPermissionCallback: OnPermissionCallback? = null,
+            onResultCallback: OnResultCallback? = null,
             onRationaleCallback: OnRationaleCallback? = null
         ) {
             if (findNeedPermissions(clazz)) {
@@ -56,7 +59,7 @@ class AndPermissions private constructor(builder: Builder) {
                         .permissions(
                             permissions
                         )
-                        .onPermissionCallback(onPermissionCallback)
+                        .onPermissionCallback(onResultCallback)
                         .onRationaleCallback(onRationaleCallback)
                         .build()
                     checker.request()
@@ -65,7 +68,7 @@ class AndPermissions private constructor(builder: Builder) {
                     for (permission in permissions) {
                         permissionResults[permission] = true
                     }
-                    onPermissionCallback?.onPermissionResult(true, permissionResults)
+                    onResultCallback?.onPermissionResult(true, permissionResults)
                 }
             } else {
                 val permissions = permissionCollector?.inspect(clazz) ?: emptyList()
@@ -73,7 +76,7 @@ class AndPermissions private constructor(builder: Builder) {
                 for (permission in permissions) {
                     permissionResults[permission] = true
                 }
-                onPermissionCallback?.onPermissionResult(true, permissionResults)
+                onResultCallback?.onPermissionResult(true, permissionResults)
             }
         }
 
@@ -124,45 +127,28 @@ class AndPermissions private constructor(builder: Builder) {
     init {
         this.context = builder.context
         this.permissions = builder.permissions
-        this.onPermissionCallback = builder.permissionCallback
+        this.onResultCallback = builder.permissionCallback
         this.onRationaleCallback = builder.rationaleCallback
+        this.onExplainCallback = builder.explainCallback
+        this.explainEach = builder.explainEach
     }
 
 
     private fun launch(
         context: Context,
-        permissions: List<String>,
+        requestPermissions: List<String>,
         authorizedPermissions: List<String>
     ) {
-        PermissionCallbackWrapper(
+
+        PermissionHandlerWrapper(
             context = context,
-            permissions = permissions,
+            requestPermissions = requestPermissions,
             authorizedPermissions = authorizedPermissions,
-            onPermissionCallback = object : OnPermissionCallback {
-                override fun onPermissionRequesting(permissions: List<String>) {
-                    onPermissionCallback?.onPermissionRequesting(permissions)
-                }
-
-                override fun onPermissionResult(
-                    isAllGranted: Boolean,
-                    permissionResults: MutableMap<String, Boolean>
-                ) {
-                    onPermissionCallback?.onPermissionResult(isAllGranted, permissionResults)
-                }
-            },
-            onRationaleCallback = if (onRationaleCallback != null) {
-                object : OnRationaleCallback {
-                    override fun onRationaleResult(rationaleResults: MutableMap<String, Boolean>) {
-                        onRationaleCallback?.onRationaleResult(rationaleResults)
-                    }
-                }
-            } else {
-                null
-            }
-        ).apply {
-            AuthorLauncher.authorLaunch(context, this)
-        }
-
+            onResultCallback = onResultCallback,
+            onRationaleCallback = onRationaleCallback,
+            onExplainCallback = onExplainCallback,
+            explainEach = explainEach
+        ).launch()
     }
 
 
@@ -175,7 +161,7 @@ class AndPermissions private constructor(builder: Builder) {
             if (needAuthorizationPermissions.size > 0) {
                 launch(
                     context = this,
-                    permissions = needAuthorizationPermissions,
+                    requestPermissions = needAuthorizationPermissions,
                     authorizedPermissions = authorizedPermissions
                 )
             } else {
@@ -183,7 +169,7 @@ class AndPermissions private constructor(builder: Builder) {
                 for (permission in permissions) {
                     permissionResults[permission] = true
                 }
-                onPermissionCallback?.onPermissionResult(true, permissionResults)
+                onResultCallback?.onPermissionResult(true, permissionResults)
             }
         }
 
@@ -191,23 +177,32 @@ class AndPermissions private constructor(builder: Builder) {
 
 
     class Builder(context: Context) {
-        internal var permissionCallback: OnPermissionCallback? = null
+        internal var permissionCallback: OnResultCallback? = null
         internal var rationaleCallback: OnRationaleCallback? = null
+        internal var explainCallback: OnExplainCallback? = null
         internal var context: SoftReference<Context>
         internal var permissions: List<String> = emptyList()
-
+        internal var explainEach: Boolean = false
         init {
             this.context = SoftReference(context)
         }
 
 
         fun permissions(permissions: List<String>) = apply { this.permissions = permissions }
-        fun onPermissionCallback(permissionCallback: OnPermissionCallback?) = apply {
+        fun onPermissionCallback(permissionCallback: OnResultCallback?) = apply {
             this.permissionCallback = permissionCallback
         }
 
         fun onRationaleCallback(rationaleCallback: OnRationaleCallback?) = apply {
             this.rationaleCallback = rationaleCallback
+        }
+
+        fun onExplainPermission(explainCallback: OnExplainCallback?) = apply {
+            this.explainCallback = explainCallback
+        }
+
+        fun explainEachGroup(value: Boolean)=apply {
+            this.explainEach = value
         }
 
         fun build() = AndPermissions(this)

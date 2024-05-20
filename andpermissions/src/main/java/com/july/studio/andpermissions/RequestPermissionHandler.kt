@@ -2,7 +2,7 @@ package com.july.studio.andpermissions
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.july.studio.andpermissions.callback.PermissionCallbackWrapper
+import com.july.studio.andpermissions.permission.ResultHandler
 import java.util.ArrayList
 
 /**
@@ -43,9 +43,9 @@ data class RequestPermissionHandler(
     }
 
 
-    fun getCallbackWrapper(): PermissionCallbackWrapper? {
+    fun getCallbackWrapper(): ResultHandler? {
         keyId?.apply {
-            return PermissionCallbackWrapper.findKeyCallback(keyId = this)
+            return ResultHandler.findKeyCallback(keyId = this)
         }
         return null
     }
