@@ -58,9 +58,12 @@ dependencies {
     implementation libs.androidx.ui.tooling.preview
     implementation libs.androidx.material3
     implementation libs.androidx.appcompat
-    implementation project(':andpermissions')
-    implementation project(':lib-annoation')
-    kapt project(path: ':lib-processor')
+    implementation 'com.github.lifelikejuly.AndPermissions:AndPermissions:0.0.1'
+    implementation 'com.github.lifelikejuly.AndPermissions:annotation:0.0.1'
+    kapt 'com.github.lifelikejuly.AndPermissions:processor:0.0.1'
+//    implementation project(':andpermissions')
+//    implementation project(':lib-annoation')
+//    kapt project(path: ':lib-processor')
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core

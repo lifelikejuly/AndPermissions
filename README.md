@@ -1,5 +1,5 @@
 # AndPermissions
-
+[![](https://jitpack.io/v/lifelikejuly/AndPermissions.svg)](https://jitpack.io/#lifelikejuly/AndPermissions)
 how to request permissions 
 ```kotlin
 
@@ -72,7 +72,9 @@ AndPermissions.jumpActivityCheck(
 ## implementation
 
 ```kotlin
-implementation xxxxx
+implementation 'com.github.lifelikejuly.AndPermissions:AndPermissions:0.0.1'
+implementation 'com.github.lifelikejuly.AndPermissions:annotation:0.0.1'
+kapt 'com.github.lifelikejuly.AndPermissions:processor:0.0.1'
 ```
 ## License
 ```text
