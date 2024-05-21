@@ -30,6 +30,7 @@ object PermissionGroups {
         Manifest.permission.BLUETOOTH_ADVERTISE,
     )
 
+
     fun collectPermissionGroup(permissions: List<String>): List<ArrayList<String>> {
         var maps = mutableMapOf<String,ArrayList<String>>()
         for (permission in permissions){

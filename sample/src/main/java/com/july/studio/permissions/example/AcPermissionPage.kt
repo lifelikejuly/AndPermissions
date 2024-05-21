@@ -66,16 +66,16 @@ class AcPermissionPage : AppCompatActivity() {
                 AndPermissions.Builder(context = context)
                     .permissions(
                         listOf(
-//                            Manifest.permission_group.CALENDAR,
                             Manifest.permission.WRITE_CALENDAR,
                             Manifest.permission.READ_CALENDAR,
-//                            Manifest.permission.CAMERA,
+                            Manifest.permission.CAMERA,
                         )
                     )
+                    .explainEachGroup(false)
                     .onExplainPermission(object : OnExplainCallback {
 
                         override fun onExplain(permissions: List<String>, onRun: OnPermissionRun) {
-                            var dialog = AlertDialog.Builder(context)
+                            var dialog = AlertDialog.Builder(requireActivity())
                                 .setMessage("为什么需要${permissions}权限说明")
                                 .setNegativeButton(
                                     "取消"
@@ -113,7 +113,6 @@ class AcPermissionPage : AppCompatActivity() {
 
                     })
                     .build()
-
             checker.request()
         }
 
@@ -173,20 +172,10 @@ class AcPermissionPage : AppCompatActivity() {
                                     }
 
                                     if (isAllGranted) {
-//                                        Toast.makeText(
-//                                            context,
-//                                            "authorized ${permissionResults}",
-//                                            Toast.LENGTH_LONG
-//                                        ).show()
                                         Intent(context, AcAnnotationPage::class.java).apply {
                                             startActivity(this)
                                         }
                                     }
-//                                    Toast.makeText(
-//                                        context,
-//                                        "onPermissionRequesting ${permissionResults.keys}",
-//                                        Toast.LENGTH_LONG
-//                                    ).show()
                                 }
                             })
                     }

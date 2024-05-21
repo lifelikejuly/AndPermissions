@@ -12,7 +12,6 @@ import com.july.studio.andpermissions.annoation.RequestPermissions
  */
 
 @RequestPermissions(permissions = [
-//    Manifest.permission_group.CALENDAR
     Manifest.permission.WRITE_CALENDAR,
     Manifest.permission.READ_CALENDAR,
     Manifest.permission.ACCESS_FINE_LOCATION
