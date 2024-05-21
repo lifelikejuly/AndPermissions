@@ -4,7 +4,6 @@ import android.content.Context
 import com.july.studio.andpermissions.AuthorLauncher
 import com.july.studio.andpermissions.callback.OnResultCallback
 import com.july.studio.andpermissions.callback.OnPermissionRun
-import com.july.studio.andpermissions.callback.OnRationaleCallback
 import com.july.studio.andpermissions.callback.OnExplainCallback
 
 class PermissionHandlerWrapper(
@@ -13,7 +12,7 @@ class PermissionHandlerWrapper(
     private var onExplainCallback: OnExplainCallback? = null,
     private var onResultCallback: OnResultCallback? = null,
     requestPermissions: List<String>,
-    onRationaleCallback: OnRationaleCallback? = null,
+//    onRationaleCallback: OnRationaleCallback? = null,
     explainEach: Boolean = false
     ) {
 
@@ -43,12 +42,12 @@ class PermissionHandlerWrapper(
                         forLaunchHandler()
                     }
                 },
-                onRationaleCallback = object : OnRationaleCallback {
-                    override fun onRationaleResult(rationaleResults: MutableMap<String, Boolean>) {
-                        permissionResultsMap.putAll(rationaleResults)
-                        forLaunchHandler()
-                    }
-                }
+//                onRationaleCallback = object : OnRationaleCallback {
+//                    override fun onRationaleResult(rationaleResults: MutableMap<String, Boolean>) {
+//                        permissionResultsMap.putAll(rationaleResults)
+//                        forLaunchHandler()
+//                    }
+//                }
             ))
         }
         permissionHandler = permissionHandlers.removeFirst()

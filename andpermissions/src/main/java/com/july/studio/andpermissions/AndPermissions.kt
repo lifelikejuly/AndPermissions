@@ -3,7 +3,6 @@ package com.july.studio.andpermissions
 import android.content.Context
 import androidx.core.content.PermissionChecker
 import com.july.studio.andpermissions.callback.OnResultCallback
-import com.july.studio.andpermissions.callback.OnRationaleCallback
 import com.july.studio.andpermissions.callback.OnExplainCallback
 import com.july.studio.andpermissions.permission.PermissionHandlerWrapper
 import com.july.studio.andpermissions.port.PermissionCollectorPort
@@ -22,7 +21,7 @@ class AndPermissions private constructor(builder: Builder) {
     private var context: SoftReference<Context>
     private var permissions: List<String> = emptyList()
     private var onResultCallback: OnResultCallback? = null
-    private var onRationaleCallback: OnRationaleCallback? = null
+//    private var onRationaleCallback: OnRationaleCallback? = null
     private var onExplainCallback: OnExplainCallback? = null
     private var explainEach: Boolean = false
 
@@ -50,7 +49,7 @@ class AndPermissions private constructor(builder: Builder) {
         fun jumpActivityCheck(
             context: Context, clazz: Class<*>,
             onResultCallback: OnResultCallback? = null,
-            onRationaleCallback: OnRationaleCallback? = null
+//            onRationaleCallback: OnRationaleCallback? = null
         ) {
             if (findNeedPermissions(clazz)) {
                 val permissions = permissionCollector!!.inspect(clazz)
@@ -60,7 +59,7 @@ class AndPermissions private constructor(builder: Builder) {
                             permissions
                         )
                         .onPermissionCallback(onResultCallback)
-                        .onRationaleCallback(onRationaleCallback)
+//                        .onRationaleCallback(onRationaleCallback)
                         .build()
                     checker.request()
                 } else {
@@ -128,7 +127,7 @@ class AndPermissions private constructor(builder: Builder) {
         this.context = builder.context
         this.permissions = builder.permissions
         this.onResultCallback = builder.permissionCallback
-        this.onRationaleCallback = builder.rationaleCallback
+//        this.onRationaleCallback = builder.rationaleCallback
         this.onExplainCallback = builder.explainCallback
         this.explainEach = builder.explainEach
     }
@@ -145,7 +144,7 @@ class AndPermissions private constructor(builder: Builder) {
             requestPermissions = requestPermissions,
             authorizedPermissions = authorizedPermissions,
             onResultCallback = onResultCallback,
-            onRationaleCallback = onRationaleCallback,
+//            onRationaleCallback = onRationaleCallback,
             onExplainCallback = onExplainCallback,
             explainEach = explainEach
         ).launch()
@@ -178,7 +177,7 @@ class AndPermissions private constructor(builder: Builder) {
 
     class Builder(context: Context) {
         internal var permissionCallback: OnResultCallback? = null
-        internal var rationaleCallback: OnRationaleCallback? = null
+//        internal var rationaleCallback: OnRationaleCallback? = null
         internal var explainCallback: OnExplainCallback? = null
         internal var context: SoftReference<Context>
         internal var permissions: List<String> = emptyList()
@@ -193,9 +192,9 @@ class AndPermissions private constructor(builder: Builder) {
             this.permissionCallback = permissionCallback
         }
 
-        fun onRationaleCallback(rationaleCallback: OnRationaleCallback?) = apply {
-            this.rationaleCallback = rationaleCallback
-        }
+//        fun onRationaleCallback(rationaleCallback: OnRationaleCallback?) = apply {
+//            this.rationaleCallback = rationaleCallback
+//        }
 
         fun onExplainPermission(explainCallback: OnExplainCallback?) = apply {
             this.explainCallback = explainCallback

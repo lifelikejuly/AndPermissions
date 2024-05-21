@@ -3,15 +3,13 @@ package com.july.studio.andpermissions.permission
 import android.content.Context
 import com.july.studio.andpermissions.AuthorLauncher
 import com.july.studio.andpermissions.callback.OnResultCallback
-import com.july.studio.andpermissions.callback.OnRationaleCallback
 
 abstract class ResultHandler(
     private var context: Context,
     private var onResultCallback: OnResultCallback?,
-    private var onRationaleCallback: OnRationaleCallback?,
     var requestPermissions: List<String>,
     var authorizedPermissions: List<String>,
-): OnResultCallback, OnRationaleCallback {
+): OnResultCallback {
 
     companion object {
         private var callbackKeyCacheMap: MutableMap<String, ResultHandler> =
@@ -48,16 +46,6 @@ abstract class ResultHandler(
         onResultCallback?.onPermissionResult(
             isAllGranted = isAllGranted,
             permissionResults = supplementPermissions(permissionResults)
-        )
-        finishKeyCallback(keyId)
-    }
-
-    override fun onRationaleResult(rationaleResults: MutableMap<String, Boolean>) {
-        AuthorLauncher.removeOver(context = context)
-        onRationaleCallback?.onRationaleResult(
-            rationaleResults = supplementPermissions(
-                rationaleResults
-            )
         )
         finishKeyCallback(keyId)
     }
